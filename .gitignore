@@ -1,3 +1,10 @@
+# Application-specific output files
+reference_image_keypoints.jpg
+saved_scenes
+
+# System metafiles
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
