@@ -1,5 +1,5 @@
 # VisualizingTheInvisible
-A demo of tracking textured 3D objects, based on the presentation and workshop "Visualizing the Invisible" at PyImageConf 2018
+A demo of tracking textured 3D objects, based on the presentation and workshop "Visualizing the Invisible" at PyImageConf 2018. For a conceptual overview, along with sample images of input and output, you may want to [download the presentation slides](https://nummist.com/opencv/Howse_PyImageConf_20180827.pdf) from the author's website.
 
 ## Dependencies
 
