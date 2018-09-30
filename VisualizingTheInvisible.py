@@ -113,7 +113,7 @@ def map_vertices_to_3D(image_size, image_real_height, mapping_type):
             num_segments = 4
         else:  # MAP_TO_CYLINDER
             num_segments = 8
-        segment_indices = range(num_segments)
+        segment_indices = list(range(num_segments))
         num_vertices = 2 * num_segments
         xs = [w * i / float(num_segments) for i in segment_indices]
         vertices_2D = [(x, 0) for x in xs] + [(x, h) for x in xs[::-1]]
@@ -122,7 +122,7 @@ def map_vertices_to_3D(image_size, image_real_height, mapping_type):
             vertex_indices_by_face += [[i, i+1, num_vertices-i-2, num_vertices-i-1]]
         vertex_indices_by_face += [[  # Last side
             num_segments-1, 0, num_vertices-1, num_segments]]
-        vertex_indices_by_face += [range(num_segments, 2 * num_segments)]  # Bottom
+        vertex_indices_by_face += [list(range(num_segments, 2 * num_segments))]  # Bottom
     else:  # MAP_TO_PLANE
         vertices_2D = [(0, 0), (w, 0), (w, h), (0, h)]
         vertex_indices_by_face = [[0, 1, 2, 3]]
@@ -229,10 +229,10 @@ class VisualizingTheInvisible(wx.Frame):
         num_segments_y = 6
         num_segments_x = 6
         for segment_y, segment_x in numpy.ndindex((num_segments_y, num_segments_x)):
-            y0 = reference_image_h * segment_y / num_segments_y - patchSize
-            x0 = reference_image_w * segment_x / num_segments_x - patchSize
-            y1 = reference_image_h * (segment_y + 1) / num_segments_y + patchSize
-            x1 = reference_image_w * (segment_x + 1) / num_segments_x + patchSize
+            y0 = reference_image_h * segment_y // num_segments_y - patchSize
+            x0 = reference_image_w * segment_x // num_segments_x - patchSize
+            y1 = reference_image_h * (segment_y + 1) // num_segments_y + patchSize
+            x1 = reference_image_w * (segment_x + 1) // num_segments_x + patchSize
             reference_mask.fill(0)
             cv2.rectangle(reference_mask, (x0, y0), (x1, y1), 255, cv2.FILLED)
             more_reference_keypoints, more_reference_descriptors = \
@@ -289,14 +289,10 @@ class VisualizingTheInvisible(wx.Frame):
         ])
         self.SetAcceleratorTable(accelerator_table)
 
-        self._video_panel = wx.StaticBitmap(self)
+        self._video_panel = wx.Panel(self, size=self._image_size)
         self._video_panel.Bind(wx.EVT_ERASE_BACKGROUND,
                                self._on_video_panel_erase_background)
         self._video_panel.Bind(wx.EVT_PAINT, self._on_video_panel_paint)
-
-        # Show a black bitmap.
-        bitmap = wx.EmptyBitmap(w, h)
-        self._video_panel.SetBitmap(bitmap)
 
         self._static_text = wx.StaticText(self)
 
@@ -352,7 +348,7 @@ class VisualizingTheInvisible(wx.Frame):
 
 
     def _run_capture_loop(self):
-        numImagesCaptured = 0L
+        numImagesCaptured = 0
         startTime = timeit.default_timer()
         while self._running:
             
@@ -361,7 +357,7 @@ class VisualizingTheInvisible(wx.Frame):
             else:
                 success, self._bgr_image = self._capture.read(self._bgr_image)
             if success:
-                numImagesCaptured += 1L
+                numImagesCaptured += 1
                 self._track_object()
                 self._video_panel.Refresh()
                 if self._save_scene_pending:
