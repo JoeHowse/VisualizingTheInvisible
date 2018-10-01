@@ -141,8 +141,15 @@ class VisualizingTheInvisible(wx.Frame):
                  saved_scenes_path='saved_scenes', title='Visualizing the Invisible'):
 
         self._capture = capture
-        w = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
-        h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        success, trial_image = capture.read()
+        if success:
+            # Use the actual image dimensions.
+            h, w = trial_image.shape[:2]
+            is_monochrome = (len(trial_image.shape) == 2)
+        else:
+            # Use the nominal image dimensions.
+            w = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self._image_size = (w, h)
         self._is_monochrome = is_monochrome
 
@@ -294,6 +301,8 @@ class VisualizingTheInvisible(wx.Frame):
                                self._on_video_panel_erase_background)
         self._video_panel.Bind(wx.EVT_PAINT, self._on_video_panel_paint)
 
+        self._video_bitmap = None
+
         self._static_text = wx.StaticText(self)
 
         border = 12
@@ -335,16 +344,12 @@ class VisualizingTheInvisible(wx.Frame):
 
     def _on_video_panel_paint(self, event):
 
-        if self._rgb_image is None:
+        if self._video_bitmap is None:
             return
-
-        # Convert the image to bitmap format.
-        h, w = self._rgb_image.shape[:2]
-        bitmap = wx.BitmapFromBuffer(w, h, self._rgb_image)
 
         # Show the bitmap.
         dc = wx.BufferedPaintDC(self._video_panel)
-        dc.DrawBitmap(bitmap, 0, 0) 
+        dc.DrawBitmap(self._video_bitmap, 0, 0)
 
 
     def _run_capture_loop(self):
@@ -359,7 +364,14 @@ class VisualizingTheInvisible(wx.Frame):
             if success:
                 numImagesCaptured += 1
                 self._track_object()
+
+                # Convert the image to bitmap format.
+                h, w = self._rgb_image.shape[:2]
+                self._video_bitmap = wx.BitmapFromBuffer(w, h, self._rgb_image)
+
+                # Signal the video panel to repaint itself from the bitmap.
                 self._video_panel.Refresh()
+
                 if self._save_scene_pending:
                     if not os.path.exists(self._saved_scenes_path):
                         os.makedirs(self._saved_scenes_path)
