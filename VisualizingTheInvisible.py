@@ -17,6 +17,9 @@ except ImportError:
     PySpinCapture = None
 
 
+WX_MAJOR_VERSION = int(wx.__version__.split('.')[0])
+
+
 __author__ = 'Joseph Howse'
 __copyright__ = 'Copyright (c) 2018, Nummist Media Corporation Limited'
 __credits__ = ['Joseph Howse']
@@ -215,6 +218,9 @@ class VisualizingTheInvisible(wx.Frame):
         self._gray_image = None
         self._mask = None
 
+        self._rgb_image_front_buffer = None
+        self._rgb_image_front_buffer_lock = threading.Lock()
+
         # Create and configure the feature detector.
         patchSize = 31
         self._feature_detector = cv2.ORB_create(nfeatures=250, scaleFactor=1.2,
@@ -301,8 +307,6 @@ class VisualizingTheInvisible(wx.Frame):
                                self._on_video_panel_erase_background)
         self._video_panel.Bind(wx.EVT_PAINT, self._on_video_panel_paint)
 
-        self._video_bitmap = None
-
         self._static_text = wx.StaticText(self)
 
         border = 12
@@ -344,12 +348,24 @@ class VisualizingTheInvisible(wx.Frame):
 
     def _on_video_panel_paint(self, event):
 
-        if self._video_bitmap is None:
+        self._rgb_image_front_buffer_lock.acquire()
+
+        if self._rgb_image_front_buffer is None:
+            self._rgb_image_front_buffer_lock.release()
             return
+
+        # Convert the image to bitmap format.
+        h, w = self._rgb_image_front_buffer.shape[:2]
+        if WX_MAJOR_VERSION < 4:
+            video_bitmap = wx.BitmapFromBuffer(w, h, self._rgb_image_front_buffer)
+        else:
+            video_bitmap = wx.Bitmap.FromBuffer(w, h, self._rgb_image_front_buffer)
+
+        self._rgb_image_front_buffer_lock.release()
 
         # Show the bitmap.
         dc = wx.BufferedPaintDC(self._video_panel)
-        dc.DrawBitmap(self._video_bitmap, 0, 0)
+        dc.DrawBitmap(video_bitmap, 0, 0)
 
 
     def _run_capture_loop(self):
@@ -365,9 +381,11 @@ class VisualizingTheInvisible(wx.Frame):
                 numImagesCaptured += 1
                 self._track_object()
 
-                # Convert the image to bitmap format.
-                h, w = self._rgb_image.shape[:2]
-                self._video_bitmap = wx.BitmapFromBuffer(w, h, self._rgb_image)
+                # Perform a thread-safe swap of the front and back image buffers.
+                self._rgb_image_front_buffer_lock.acquire()
+                self._rgb_image_front_buffer, self._rgb_image = \
+                    self._rgb_image, self._rgb_image_front_buffer
+                self._rgb_image_front_buffer_lock.release()
 
                 # Signal the video panel to repaint itself from the bitmap.
                 self._video_panel.Refresh()
