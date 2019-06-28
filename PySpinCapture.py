@@ -58,13 +58,13 @@ class PySpinCapture:
         # Set the ROI.
         x, y, w, h  = roi
         node_offset_x = PySpin.CIntegerPtr(self._nodemap.GetNode('OffsetX'))
-        node_offset_x.SetValue(x)
+        node_offset_x.SetValue(int(x))
         node_offset_y = PySpin.CIntegerPtr(self._nodemap.GetNode('OffsetY'))
-        node_offset_y.SetValue(y)
+        node_offset_y.SetValue(int(y))
         node_width = PySpin.CIntegerPtr(self._nodemap.GetNode('Width'))
-        node_width.SetValue(w)
+        node_width.SetValue(int(w))
         node_height = PySpin.CIntegerPtr(self._nodemap.GetNode('Height'))
-        node_height.SetValue(h)
+        node_height.SetValue(int(h))
 
         self._camera.BeginAcquisition()
 
@@ -76,7 +76,26 @@ class PySpinCapture:
         if propId == cv2.CAP_PROP_FRAME_HEIGHT:
             node_height = PySpin.CIntegerPtr(self._nodemap.GetNode('Height'))
             return float(node_height.GetValue())
+        if propId == cv2.CAP_PROP_GAIN:
+            node_gain = PySpin.CFloatPtr(self._nodemap.GetNode('Gain'))
+            return node_gain.GetValue()
         return 0.0
+
+
+    def set(self, propId, value):
+        if propId == cv2.CAP_PROP_FRAME_WIDTH:
+            node_width = PySpin.CIntegerPtr(self._nodemap.GetNode('Width'))
+            node_width.SetValue(int(value))
+            return True
+        if propId == cv2.CAP_PROP_FRAME_HEIGHT:
+            node_height = PySpin.CIntegerPtr(self._nodemap.GetNode('Height'))
+            node_height.SetValue(int(value))
+            return True
+        if propId == cv2.CAP_PROP_GAIN:
+            node_gain = PySpin.CFloatPtr(self._nodemap.GetNode('Gain'))
+            node_gain.SetValue(value)
+            return True
+        return False
 
 
     def __del__(self):
