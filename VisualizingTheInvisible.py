@@ -233,6 +233,7 @@ class VisualizingTheInvisible(wx.Frame):
         bgr_reference_image = cv2.resize(
             bgr_reference_image, (0, 0), None, reference_image_resize_factor,
             reference_image_resize_factor, cv2.INTER_CUBIC)
+        reference_image_h, reference_image_w = bgr_reference_image.shape[:2]
         gray_reference_image = convert_to_gray(bgr_reference_image)
         reference_mask = numpy.empty_like(gray_reference_image)
 
