@@ -623,16 +623,16 @@ class VisualizingTheInvisible(wx.Frame):
             yaw = math.atan2(-m20, m00)
             roll = math.atan2(-m12, m11)
 
-        self._euler_rotation_vector[0] = pitch;
-        self._euler_rotation_vector[1] = yaw;
-        self._euler_rotation_vector[2] = roll;
+        self._euler_rotation_vector[0] = pitch
+        self._euler_rotation_vector[1] = yaw
+        self._euler_rotation_vector[2] = roll
 
 
     def _convert_euler_to_rodrigues(self):
 
         pitch = self._euler_rotation_vector[0]
-        yaw = self._euler_rotation_vector[1];
-        roll = self._euler_rotation_vector[2];
+        yaw = self._euler_rotation_vector[1]
+        roll = self._euler_rotation_vector[2]
 
         cyaw = math.cos(yaw)
         syaw = math.sin(yaw)
