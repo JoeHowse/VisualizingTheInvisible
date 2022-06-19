@@ -542,15 +542,15 @@ class VisualizingTheInvisible(wx.Frame):
     def _init_kalman_state_matrices(self):
 
         t_x, t_y, t_z = self._translation_vector.flat
-        r_x, r_y, r_z = self._euler_rotation_vector.flat
+        pitch, yaw, roll = self._euler_rotation_vector.flat
 
         self._kalman.statePre = numpy.array(
-            [[t_x], [t_y], [t_z], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
-             [r_x], [r_y], [r_z], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]],
+            [[t_x],   [t_y], [t_z],  [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
+             [pitch], [yaw], [roll], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]],
             FLOAT_TYPE)
         self._kalman.statePost = numpy.array(
-            [[t_x], [t_y], [t_z], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
-             [r_x], [r_y], [r_z], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]],
+            [[t_x],   [t_y], [t_z],  [0.0], [0.0], [0.0], [0.0], [0.0], [0.0],
+             [pitch], [yaw], [roll], [0.0], [0.0], [0.0], [0.0], [0.0], [0.0]],
             FLOAT_TYPE)
 
 
@@ -559,10 +559,10 @@ class VisualizingTheInvisible(wx.Frame):
         self._kalman.predict()
 
         t_x, t_y, t_z = self._translation_vector.flat
-        r_x, r_y, r_z = self._euler_rotation_vector.flat
+        pitch, yaw, roll = self._euler_rotation_vector.flat
 
         estimate = self._kalman.correct(numpy.array(
-            [[t_x], [t_y], [t_z], [r_x], [r_y], [r_z]], FLOAT_TYPE))
+            [[t_x], [t_y], [t_z], [pitch], [yaw], [roll]], FLOAT_TYPE))
 
         translation_estimate = estimate[0:3]
         euler_rotation_estimate = estimate[9:12]
@@ -580,14 +580,14 @@ class VisualizingTheInvisible(wx.Frame):
             # Reset the rotational motion stabilization.
             # Let the translational motion stabilization continue as-is.
 
-            self._kalman.statePre[9] = r_x
-            self._kalman.statePre[10] = r_y
-            self._kalman.statePre[11] = r_z
+            self._kalman.statePre[9] = pitch
+            self._kalman.statePre[10] = yaw
+            self._kalman.statePre[11] = roll
             self._kalman.statePre[12:18] = 0.0
 
-            self._kalman.statePost[9] = r_x
-            self._kalman.statePost[10] = r_y
-            self._kalman.statePost[11] = r_z
+            self._kalman.statePost[9] = pitch
+            self._kalman.statePost[10] = yaw
+            self._kalman.statePost[11] = roll
             self._kalman.statePost[12:18] = 0.0
         else:
             self._euler_rotation_vector[:] = euler_rotation_estimate
@@ -607,14 +607,15 @@ class VisualizingTheInvisible(wx.Frame):
         m20 = self._rotation_matrix[2, 0]
         m22 = self._rotation_matrix[2, 2]
 
-        # Convert to Euler angles using the Y-Z-X Tait-Bryan convention.
+        # Convert to Euler angles using the yaw-pitch-roll
+        # Tait-Bryan convention.
         if m10 > 0.998:
-            # The rotation is near the singularity at the North pole.
+            # The rotation is near the "vertical climb" singularity.
             pitch = 0.5 * math.pi
             yaw = math.atan2(m02, m22)
             roll = 0.0
         elif m10 < -0.998:
-            # The rotation is near the singularity at the South pole.
+            # The rotation is near the "nose dive" singularity.
             pitch = -0.5 * math.pi
             yaw = math.atan2(m02, m22)
             roll = 0.0
@@ -641,7 +642,8 @@ class VisualizingTheInvisible(wx.Frame):
         croll = math.cos(roll)
         sroll = math.sin(roll)
 
-        # Convert from Euler angles using the Y-Z-X Tait-Bryan convention.
+        # Convert from Euler angles using the yaw-pitch-roll
+        # Tait-Bryan convention.
         m00 = cyaw * cpitch
         m01 = syaw * sroll - cyaw * spitch * croll
         m02 = cyaw * spitch * sroll + syaw * croll
