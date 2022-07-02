@@ -679,9 +679,9 @@ class VisualizingTheInvisible(wx.Frame):
         up =      (int(points_2D[2, 0, 0]), int(points_2D[2, 0, 1]))
         forward = (int(points_2D[3, 0, 0]), int(points_2D[3, 0, 1]))
 
-        cv2.arrowedLine(self._rgb_image, origin, right,   (255,   0,   0))  # X: red
-        cv2.arrowedLine(self._rgb_image, origin, up,      (  0, 255,   0))  # Y: green
-        cv2.arrowedLine(self._rgb_image, origin, forward, (  0,   0, 255))  # Z: blue
+        cv2.arrowedLine(self._rgb_image, origin, right,   (255,   0,   0), 2)  # X: red
+        cv2.arrowedLine(self._rgb_image, origin, up,      (  0, 255,   0), 2)  # Y: green
+        cv2.arrowedLine(self._rgb_image, origin, forward, (  0,   0, 255), 2)  # Z: blue
 
 
     def _make_and_draw_object_mask(self):
